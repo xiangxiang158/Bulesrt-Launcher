@@ -1,5 +1,10 @@
 # Bulesrt Launcher
 
+[![release](https://img.shields.io/github/v/release/xiangxiang158/Bulesrt-Launcher?label=release&color=5A79E8)](https://github.com/xiangxiang158/Bulesrt-Launcher/releases)
+[![downloads](https://img.shields.io/github/downloads/xiangxiang158/Bulesrt-Launcher/total?label=downloads&color=5A79E8)](https://github.com/xiangxiang158/Bulesrt-Launcher/releases)
+[![build](https://img.shields.io/github/actions/workflow/status/xiangxiang158/Bulesrt-Launcher/build.yml?label=build&color=5A79E8)](https://github.com/xiangxiang158/Bulesrt-Launcher/actions)
+[![license](https://img.shields.io/badge/license-MIT-5A79E8)](LICENSE)
+
 > A Windows quick launcher with a deep-blue whale theme · .NET 8 + WPF · single file · fully local
 
 Collect the exe / shortcut / URL / folder icons scattered across your desktop and Start menu into one place:

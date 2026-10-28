@@ -1,5 +1,10 @@
 # Bulesrt Launcher
 
+[![release](https://img.shields.io/github/v/release/xiangxiang158/Bulesrt-Launcher?label=release&color=5A79E8)](https://github.com/xiangxiang158/Bulesrt-Launcher/releases)
+[![downloads](https://img.shields.io/github/downloads/xiangxiang158/Bulesrt-Launcher/total?label=downloads&color=5A79E8)](https://github.com/xiangxiang158/Bulesrt-Launcher/releases)
+[![build](https://img.shields.io/github/actions/workflow/status/xiangxiang158/Bulesrt-Launcher/build.yml?label=build&color=5A79E8)](https://github.com/xiangxiang158/Bulesrt-Launcher/actions)
+[![license](https://img.shields.io/badge/license-MIT-5A79E8)](LICENSE)
+
 > 深蓝鲸鱼主题的 Windows 快速启动器 · .NET 8 + WPF · 单文件 · 纯本地
 >
 > [English](README.en.md) · 参与开发见 [CONTRIBUTING.md](CONTRIBUTING.md) · 更新记录见 [CHANGELOG.md](CHANGELOG.md)
