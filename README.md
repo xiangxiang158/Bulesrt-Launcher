@@ -63,7 +63,7 @@
 >
 > 如果上面的链接打不开（还没发版），直接看 [Releases 页面](https://github.com/xiangxiang158/Bulesrt-Launcher/releases) 或按下面的方式自己编译。
 
-> 国内网络下载慢的话，也可以到 [Gitee 镜像](https://gitee.com/disembarking/bulesrt-launcher) 的「发行版 / Releases」页面取同一个安装包。
+> 国内网络下载慢的话，Gitee 镜像上挂了同一个版本：[Gitee v2.0.0 发行版](https://gitee.com/disembarking/bulesrt-launcher/releases/tag/v2.0.0)（三个附件文件名一致，下载更快）。
 
 **卸载**：设置 → 左下角「卸载…」，或 Windows「应用和功能」里点 Bulesrt Launcher，或直接运行安装目录里的 `uninstall.exe`。
 卸载会清掉程序文件、桌面与开始菜单快捷方式、开机自启和「应用和功能」条目；`data\` 和 `plugins\` 默认保留（卸载界面里可以勾选一起删）。

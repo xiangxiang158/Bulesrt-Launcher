@@ -55,6 +55,8 @@ so copying the folder to another machine keeps your setup.
 
 Uninstall via Settings → bottom-left “卸载…”, or Windows “Apps & features”, or `uninstall.exe` in the install folder.
 
+Mirror for mainland China: [Gitee v2.0.0 release](https://gitee.com/disembarking/bulesrt-launcher/releases/tag/v2.0.0) (same three assets).
+
 ## Build from source
 
 Requires **.NET 8 SDK** on Windows 10/11 x64.
