@@ -614,8 +614,8 @@ public static class Installer
             progress.Report((30, "正在删除快捷方式和开机自启…"));
             DeleteShortcuts();
             // 启动器自己写的开机自启值是 "RexeLauncher"；"BulesrtLauncher" 一并清掉，防止老版本残留
-            RunReg($"delete \"{RunKey}\" /v \"BulesrtLauncher\" /f");
-            RunReg($"delete \"{RunKey}\" /v \"{RunValueName}\" /f");
+            RunReg($"delete \"HKCU\\{RunKey}\" /v \"BulesrtLauncher\" /f");
+            RunReg($"delete \"HKCU\\{RunKey}\" /v \"{RunValueName}\" /f");
 
             progress.Report((50, "正在删除程序文件…"));
             var kept = new List<string>();
@@ -638,7 +638,7 @@ public static class Installer
             }
 
             progress.Report((80, "正在清理注册表…"));
-            RunReg($"delete \"{UninstallKey}\" /f");
+            RunReg($"delete \"HKCU\\{UninstallKey}\" /f");
 
             progress.Report((90, "正在收尾…"));
             var uninstallSelf = UninstallExe(targetDir);
