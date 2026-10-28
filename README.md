@@ -7,6 +7,9 @@
 
 > 深蓝鲸鱼主题的 Windows 快速启动器 · .NET 8 + WPF · 单文件 · 纯本地
 >
+> 仓库：[GitHub](https://github.com/xiangxiang158/Bulesrt-Launcher) · 国内镜像：[Gitee](https://gitee.com/disembarking/bulesrt-launcher)
+>
+>
 > [English](README.en.md) · 参与开发见 [CONTRIBUTING.md](CONTRIBUTING.md) · 更新记录见 [CHANGELOG.md](CHANGELOG.md)
 
 把散落在桌面、开始菜单里的 exe / 快捷方式 / 网址 / 文件夹收进一个界面：分类、搜索、一键启动、多开、看运行状态，再配一层自定义背景（图片或 GIF）。
@@ -59,6 +62,8 @@
 > 安装包是单文件、离线内置的，不联网；默认装到 `%LOCALAPPDATA%\Programs\BulesrtLauncher`。
 >
 > 如果上面的链接打不开（还没发版），直接看 [Releases 页面](https://github.com/xiangxiang158/Bulesrt-Launcher/releases) 或按下面的方式自己编译。
+
+> 国内网络下载慢的话，也可以到 [Gitee 镜像](https://gitee.com/disembarking/bulesrt-launcher) 的「发行版 / Releases」页面取同一个安装包。
 
 **卸载**：设置 → 左下角「卸载…」，或 Windows「应用和功能」里点 Bulesrt Launcher，或直接运行安装目录里的 `uninstall.exe`。
 卸载会清掉程序文件、桌面与开始菜单快捷方式、开机自启和「应用和功能」条目；`data\` 和 `plugins\` 默认保留（卸载界面里可以勾选一起删）。

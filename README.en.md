@@ -6,6 +6,9 @@
 [![license](https://img.shields.io/badge/license-MIT-5A79E8)](LICENSE)
 
 > A Windows quick launcher with a deep-blue whale theme · .NET 8 + WPF · single file · fully local
+>
+> Repo: [GitHub](https://github.com/xiangxiang158/Bulesrt-Launcher) · Mirror for mainland China: [Gitee](https://gitee.com/disembarking/bulesrt-launcher)
+>
 
 Collect the exe / shortcut / URL / folder icons scattered across your desktop and Start menu into one place:
 categories, search, one-click launch, multiple instances, live running status, plus a custom background (image or GIF).
