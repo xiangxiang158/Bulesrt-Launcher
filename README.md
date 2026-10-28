@@ -42,18 +42,22 @@
 
 ## 下载与安装
 
-**绿色便携版**：只要一个 `BulesrtLauncher.exe`，双击运行，首次启动会在旁边生成 `data\`。
+**[→ 所有版本见 Releases](https://github.com/xiangxiang158/Bulesrt-Launcher/releases)**
 
-**安装包**（两种，都是单文件、离线）：
+| 下载 | 大小 | 说明 |
+|---|---|---|
+| [BulesrtLauncher-2.0.0-setup.exe](https://github.com/xiangxiang158/Bulesrt-Launcher/releases/latest/download/BulesrtLauncher-2.0.0-setup.exe) | 2.6 MB | **推荐**。安装包，覆盖安装、保留现有 `data\`，装完是空项目库 |
+| [BulesrtLauncher-2.0.0-setup-fresh.exe](https://github.com/xiangxiang158/Bulesrt-Launcher/releases/latest/download/BulesrtLauncher-2.0.0-setup-fresh.exe) | 2.6 MB | 全新安装：先把现有 `data\` 改名成 `data.bak-时间` 备份，再放一份空库 |
+| [BulesrtLauncher.exe](https://github.com/xiangxiang158/Bulesrt-Launcher/releases/latest/download/BulesrtLauncher.exe) | 1.4 MB | 绿色便携版单文件，双击即用，旁边自动生成 `data\` |
 
-| 包 | 行为 |
-|---|---|
-| `BulesrtLauncher-2.0.0-离线空项目版.exe` | 覆盖安装，**保留**现有 `data\`，装完是空项目库 |
-| `BulesrtLauncher-2.0.0-全新安装包.exe` | 全新安装，先把现有 `data\` 改名成 `data.bak-时间` 备份，再放一份空库 |
+> 装完（或第一次运行）默认就是「蓝色插画背景 + 透明图标盒子」的深色外观。
+> 安装包是单文件、离线内置的，不联网；默认装到 `%LOCALAPPDATA%\Programs\BulesrtLauncher`。
+>
+> 如果上面的链接打不开（还没发版），直接看 [Releases 页面](https://github.com/xiangxiang158/Bulesrt-Launcher/releases) 或按下面的方式自己编译。
 
-默认装到 `%LOCALAPPDATA%\Programs\BulesrtLauncher`，可以改；装完会生成 `uninstall.exe` 并注册卸载项。
-
-**卸载**：设置 → 左下角「卸载…」，或 Windows「应用和功能」里的 Bulesrt Launcher，或直接跑安装目录里的 `uninstall.exe`。绿色版可以只删文件夹（先关掉「开机自启动」）。
+**卸载**：设置 → 左下角「卸载…」，或 Windows「应用和功能」里点 Bulesrt Launcher，或直接运行安装目录里的 `uninstall.exe`。
+卸载会清掉程序文件、桌面与开始菜单快捷方式、开机自启和「应用和功能」条目；`data\` 和 `plugins\` 默认保留（卸载界面里可以勾选一起删）。
+绿色便携版直接删文件夹即可（先关掉「开机自启动」）。
 
 ## 从源码构建
 

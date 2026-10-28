@@ -35,6 +35,18 @@ so copying the folder to another machine keeps your setup.
 |---|---|
 | ![](docs/settings.png) | ![](docs/artwork.png) |
 
+## Download
+
+**[Releases](https://github.com/xiangxiang158/Bulesrt-Launcher/releases)**
+
+| Asset | Size | Notes |
+|---|---|---|
+| `BulesrtLauncher-2.0.0-setup.exe` | 2.6 MB | installer, keeps your existing `data\` (recommended) |
+| `BulesrtLauncher-2.0.0-setup-fresh.exe` | 2.6 MB | installer, backs up `data\` then ships an empty library |
+| `BulesrtLauncher.exe` | 1.4 MB | portable single file, no installation |
+
+Uninstall via Settings → bottom-left “卸载…”, or Windows “Apps & features”, or `uninstall.exe` in the install folder.
+
 ## Build from source
 
 Requires **.NET 8 SDK** on Windows 10/11 x64.
