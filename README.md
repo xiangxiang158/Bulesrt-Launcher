@@ -1,6 +1,8 @@
 # Bulesrt Launcher
 
 > 深蓝鲸鱼主题的 Windows 快速启动器 · .NET 8 + WPF · 单文件 · 纯本地
+>
+> [English](README.en.md) · 参与开发见 [CONTRIBUTING.md](CONTRIBUTING.md) · 更新记录见 [CHANGELOG.md](CHANGELOG.md)
 
 把散落在桌面、开始菜单里的 exe / 快捷方式 / 网址 / 文件夹收进一个界面：分类、搜索、一键启动、多开、看运行状态，再配一层自定义背景（图片或 GIF）。
 

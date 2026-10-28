@@ -1,0 +1,52 @@
+name: 问题反馈
+description: 报告一个可以复现的 bug
+labels: [ bug ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请尽量把信息填全，尤其是**版本**和**日志**，能省掉好几轮来回。
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: 设置 → 左下角「关于」里的版本号，或安装包文件名
+      placeholder: 2.0.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: 系统
+      placeholder: Windows 11 23H2 x64 / Windows 10 22H2 x64
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开设置
+        2. 拖动「图标盒子透明」到 100%
+        3. ……
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果 / 实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志（可选）
+      description: `data\launch.log` 或插件日志 `data\plugins.log` 的相关片段
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 自查
+      options:
+        - label: 我用的是最新版本
+        - label: 我确认这不是某个具体游戏/软件自身的问题
