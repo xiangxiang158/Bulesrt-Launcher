@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>BulesrtLauncher.Sdk</AssemblyName>
+    <RootNamespace>Bulesrt.Sdk</RootNamespace>
+    <Version>1.1.0</Version>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 接口成员的 XML 注释是逐步补的，别让 CS1591 淹没真正的警告 -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <Description>Plugin SDK for Bulesrt Launcher</Description>
+    <Copyright>© 2026 xiang. All rights reserved.</Copyright>
+    <Company>xiang</Company>
+    <Product>Bulesrt Launcher</Product>
+  </PropertyGroup>
+</Project>

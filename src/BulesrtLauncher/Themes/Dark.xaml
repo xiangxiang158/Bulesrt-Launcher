@@ -1,0 +1,32 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="BgBrush" Color="#070C1C" />
+    <RadialGradientBrush x:Key="GlowBrush" GradientOrigin="0.5,0.02" Center="0.5,0.02" RadiusX="0.95" RadiusY="1">
+        <GradientStop Color="#3A6C8BF2" Offset="0" />
+        <GradientStop Color="#0F6C8BF2" Offset="0.5" />
+        <GradientStop Color="#006C8BF2" Offset="1" />
+    </RadialGradientBrush>
+    <SolidColorBrush x:Key="PanelBrush" Color="#0D1530" />
+    <SolidColorBrush x:Key="DialogBrush" Color="#0F1733" />
+    <SolidColorBrush x:Key="CardBrush" Color="#121B3A" />
+    <SolidColorBrush x:Key="Card2Brush" Color="#192445" />
+    <SolidColorBrush x:Key="LineBrush" Color="#263257" />
+    <SolidColorBrush x:Key="LineSoftBrush" Color="#12FFFFFF" />
+    <SolidColorBrush x:Key="TextBrush" Color="#E7ECF9" />
+    <SolidColorBrush x:Key="Text2Brush" Color="#A5B2D2" />
+    <SolidColorBrush x:Key="DimBrush" Color="#6B779B" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#5A79E8" />
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#3A5A79E8" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#E2727C" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#33E2727C" />
+    <SolidColorBrush x:Key="WhiteButtonBrush" Color="#E9EDF9" />
+    <SolidColorBrush x:Key="WhiteButtonTextBrush" Color="#0A1024" />
+    <SolidColorBrush x:Key="OverlayBrush" Color="#D9060B1C" />
+    <SolidColorBrush x:Key="TileBrush" Color="#121B3A" />
+    <SolidColorBrush x:Key="TileHoverBrush" Color="#16224A" />
+    <SolidColorBrush x:Key="NavActiveBrush" Color="#3A5A79E8" />
+    <SolidColorBrush x:Key="NavHoverBrush" Color="#0FFFFFFF" />
+    <SolidColorBrush x:Key="InputBrush" Color="#192445" />
+</ResourceDictionary>

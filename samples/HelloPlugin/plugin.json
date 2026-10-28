@@ -1,0 +1,8 @@
+﻿{
+  "id": "hello",
+  "name": "Hello Plugin",
+  "version": "1.0.0",
+  "author": "Bulesrt",
+  "assembly": "HelloPlugin.dll",
+  "type": "HelloPlugin.HelloPlugin"
+}

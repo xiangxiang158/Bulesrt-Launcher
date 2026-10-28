@@ -1,0 +1,52 @@
+<Window x:Class="BulesrtLauncher.Views.PluginCommandsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:BulesrtLauncher.Services.Ui"
+        Title="插件命令 · Bulesrt Launcher" Width="640" Height="460"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
+        FontFamily="{StaticResource UiFont}" FontSize="13"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Grid Margin="20,16,20,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="插件命令" FontSize="17" FontWeight="SemiBold" />
+            <TextBlock Text="双击运行；命令由插件提供，出错只会弹提示，不会影响启动器。"
+                       FontSize="12" Foreground="{DynamicResource DimBrush}" Margin="0,6,0,0" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Margin="0,14,0,0" CornerRadius="12" Background="{Binding CardBrush, Source={x:Static ui:SurfaceState.Instance}}"
+                BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+            <ListBox x:Name="CommandList" Background="Transparent" BorderThickness="0" Margin="6"
+                     MouseDoubleClick="CommandList_MouseDoubleClick">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="6,6,6,6">
+                            <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Description}" FontSize="11.5"
+                                       Foreground="{DynamicResource DimBrush}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="HintText" FontSize="11.5" Foreground="{DynamicResource DimBrush}" VerticalAlignment="Center"
+                       Margin="0,0,12,0" TextWrapping="Wrap" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Style="{StaticResource BaseButton}" Content="运行选中项" Click="Run_Click" />
+                <Button Style="{StaticResource PrimaryButton}" Content="关闭" Margin="8,0,0,0" Click="Close_Click" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

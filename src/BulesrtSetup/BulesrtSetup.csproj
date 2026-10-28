@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>BulesrtSetup</AssemblyName>
+    <RootNamespace>BulesrtSetup</RootNamespace>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>2.0.0</Version>
+    <AssemblyTitle>Bulesrt Launcher 安装程序</AssemblyTitle>
+    <Product>Bulesrt Launcher</Product>
+    <Copyright>© 2026 xiang. All rights reserved.</Copyright>
+    <Company>xiang</Company>
+    <Description>Bulesrt Launcher 安装器（离线空项目版 / 在线版）</Description>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FreshBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);FRESH_DEFAULT</DefineConstants>
+    <AssemblyTitle>Bulesrt Launcher 全新安装程序</AssemblyTitle>
+    <Description>Bulesrt Launcher 全新安装包（不保留现有项目）</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="payload\BulesrtLauncher.exe" LogicalName="payload.exe"
+                      Condition="Exists('payload\BulesrtLauncher.exe')" />
+    <EmbeddedResource Include="payload\payload-readme.txt" LogicalName="payload-readme.txt" />
+    <EmbeddedResource Include="payload\artwork.png" LogicalName="artwork.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\logo.png" />
+  </ItemGroup>
+
+  <!-- 安装器把启动器 exe 作为嵌入资源打包：没有它就先报个明白话，别等运行期空指针 -->
+  <Target Name="RequireLauncherPayload" BeforeTargets="PrepareForBuild"
+          Condition="!Exists('$(MSBuildProjectDirectory)\payload\BulesrtLauncher.exe')">
+    <Error Text="缺少 payload\BulesrtLauncher.exe。请先运行仓库根目录的 build.cmd（它会先发布启动器，再打包安装器）。" />
+  </Target>
+</Project>
+
+

@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>BulesrtLauncher</AssemblyName>
+    <RootNamespace>BulesrtLauncher</RootNamespace>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>2.0.0</Version>
+    <AssemblyTitle>Bulesrt Launcher</AssemblyTitle>
+    <Product>Bulesrt Launcher</Product>
+    <Copyright>© 2026 xiang. All rights reserved.</Copyright>
+    <Company>xiang</Company>
+    <Description>Bulesrt Launcher · 深蓝鲸鱼主题的 Windows 快速启动器</Description>
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BulesrtLauncher.Sdk\BulesrtLauncher.Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\art.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Drawing" />
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+</Project>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

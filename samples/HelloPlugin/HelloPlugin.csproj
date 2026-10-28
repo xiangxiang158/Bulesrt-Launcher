@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>HelloPlugin</AssemblyName>
+    <RootNamespace>HelloPlugin</RootNamespace>
+    <Version>1.0.0</Version>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <!-- 在仓库里：直接引用 SDK 工程 -->
+  <ItemGroup Condition="Exists('..\..\BulesrtLauncher.Sdk\BulesrtLauncher.Sdk.csproj')">
+    <ProjectReference Include="..\..\BulesrtLauncher.Sdk\BulesrtLauncher.Sdk.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!-- 在 SDK 压缩包里：引用解压出来的 lib\net8.0\BulesrtLauncher.Sdk.dll -->
+  <ItemGroup Condition="!Exists('..\..\BulesrtLauncher.Sdk\BulesrtLauncher.Sdk.csproj')">
+    <Reference Include="BulesrtLauncher.Sdk">
+      <HintPath>..\..\lib\net8.0\BulesrtLauncher.Sdk.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
