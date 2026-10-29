@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Windows;
 using BulesrtLauncher.Models;
@@ -77,24 +78,21 @@ public static class LaunchService
     }
 
     /// <summary>
-    /// 兼容模式：交给 explorer.exe 打开，和鼠标双击完全同一条路径。
-    /// 个别程序（例如几个卸载器/老 Delphi 程序）自己启动会崩，用这个往往就正常。
+    /// 兼容模式：把原始路径（尤其是 .lnk）原样交给 Shell，让 Windows 自己解析，
+    /// 和鼠标双击完全同一条路径 —— 不再 spawn explorer.exe（那玩意在某些机器上会 0xc0000142）。
     /// </summary>
     public static (bool Ok, string Error) LaunchViaExplorer(AppItem item)
     {
         var raw = (item.Target ?? "").Trim().Trim('"');
         if (string.IsNullOrWhiteSpace(raw)) return (false, "启动目标为空");
-        try
-        {
-            var psi = new ProcessStartInfo("explorer.exe", $"\"{raw}\"") { UseShellExecute = true };
-            Process.Start(psi);
-            Log($"raw={raw} | via explorer.exe（兼容模式）");
-            return (true, "");
-        }
-        catch (Exception ex)
-        {
-            return (false, ex.Message);
-        }
+        if (!raw.Contains("://") && !File.Exists(raw) && !Directory.Exists(raw))
+            return (false, "文件不存在");
+
+        var (ok, winError) = ShellLauncher.Execute(raw, null, null, null);
+        Log($"raw={raw} | via shell（兼容模式，原样交给 Shell）");
+        if (ok) return (true, "");
+        if (winError == 1223) return (false, "已取消管理员授权");
+        return (false, winError == 0 ? "启动失败" : $"ShellExecuteEx 失败 (WinError {winError})");
     }
 
     private static bool IsDirectory(string path)
@@ -173,18 +171,37 @@ public static class LaunchService
         }
     }
 
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr ppidl, uint sfgaoIn, out uint psfgaoOut);
+
+    [DllImport("shell32.dll")]
+    private static extern int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, IntPtr[]? apidl, uint dwFlags);
+
+    [DllImport("shell32.dll")]
+    private static extern void ILFree(IntPtr pidl);
+
+    /// <summary>在资源管理器里定位文件/打开文件夹 —— 直接调 Shell API，不 spawn explorer.exe。</summary>
     public static void OpenContainingFolder(string target)
     {
+        IntPtr pidl = IntPtr.Zero;
         try
         {
-            if (File.Exists(target))
-                Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{target}\"") { UseShellExecute = true });
-            else if (Directory.Exists(target))
-                Process.Start(new ProcessStartInfo("explorer.exe", $"\"{target}\"") { UseShellExecute = true });
+            if (!File.Exists(target) && !Directory.Exists(target)) return;
+            if (SHParseDisplayName(target, IntPtr.Zero, out pidl, 0, out _) != 0 || pidl == IntPtr.Zero) return;
+            var one = new[] { pidl };
+            if (SHOpenFolderAndSelectItems(pidl, 1, one, 0) != 0)
+            {
+                // 文件夹本身：打开它
+                SHOpenFolderAndSelectItems(pidl, 0, null, 1);
+            }
         }
         catch
         {
             // ignored
+        }
+        finally
+        {
+            if (pidl != IntPtr.Zero) ILFree(pidl);
         }
     }
 
