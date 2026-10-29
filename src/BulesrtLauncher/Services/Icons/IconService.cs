@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -315,6 +315,8 @@ public static class IconService
             image.CacheOption = BitmapCacheOption.OnLoad;
             image.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
             image.UriSource = new Uri(file, UriKind.Absolute);
+            // 网格里图标最大 84px（125% 缩放下 105），128 够用：解码量和常驻内存都降到 1/4
+            image.DecodePixelWidth = 128;
             image.EndInit();
             image.Freeze();
             return image;

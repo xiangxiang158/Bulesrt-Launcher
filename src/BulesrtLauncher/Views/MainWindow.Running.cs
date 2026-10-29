@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Threading;
 using BulesrtLauncher.Services.Platform;
@@ -11,6 +11,7 @@ public partial class MainWindow
     private readonly DispatcherTimer _runningTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private bool _runningBusy;
     private bool _runningCleared;
+    private int _runningVersion;
 
     private void InitRunningWatcher()
     {
@@ -35,16 +36,49 @@ public partial class MainWindow
         }
         if (!IsVisible || WindowState == WindowState.Minimized) return;
 
+        RefreshRunningAsync();
+    }
+
+    /// <summary>
+    /// 扫描放到后台线程：以前整张进程表（含系统进程）每 3 秒在 UI 线程上走一遍，
+    /// 还要对每个进程读 MainModule，一次几十毫秒的卡顿就是它。现在只深挖项目库里出现过的
+    /// 进程名，UI 线程只负责把绿点换掉。
+    /// </summary>
+    private async void RefreshRunningAsync()
+    {
         _runningBusy = true;
+        var version = ++_runningVersion;
         try
         {
-            var snapshot = RunningService.Snapshot();
-            foreach (var item in _store.Db.Items)
+            var items = _store.Db.Items.ToArray();
+            if (items.Length == 0) return;
+
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in items)
             {
-                var (processName, exePath) = RunningService.ForItem(item);
-                var (count, _) = RunningService.Lookup(snapshot, exePath, processName);
-                item.LiveInstances = count;
-                item.IsRunning = count > 0;
+                var (processName, _) = RunningService.ForItem(item);
+                if (!string.IsNullOrEmpty(processName)) names.Add(processName);
+            }
+            if (names.Count == 0) return;
+
+            var counts = await Task.Run(() =>
+            {
+                var snapshot = RunningService.Snapshot(names);
+                var result = new int[items.Length];
+                for (var i = 0; i < items.Length; i++)
+                {
+                    var (processName, exePath) = RunningService.ForItem(items[i]);
+                    result[i] = RunningService.Lookup(snapshot, exePath, processName).Count;
+                }
+                return result;
+            }).ConfigureAwait(true);
+
+            if (version != _runningVersion) return;   // 期间又刷新过，这批结果丢掉
+
+            for (var i = 0; i < items.Length; i++)
+            {
+                items[i].LiveInstances = counts[i];
+                items[i].IsRunning = counts[i] > 0;
             }
             _runningCleared = false;
         }

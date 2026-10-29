@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -26,7 +27,7 @@ public sealed class ProcessSnapshot
 /// </summary>
 public static class RunningService
 {
-    private static readonly Dictionary<string, (string? Name, string? Path)> TargetCache =
+    private static readonly ConcurrentDictionary<string, (string? Name, string? Path)> TargetCache =
         new(StringComparer.OrdinalIgnoreCase);
 
     [DllImport("user32.dll")]
@@ -72,13 +73,21 @@ public static class RunningService
 
     public static (string? Name, string? Path) ForItem(AppItem item) => Resolve(item.Target);
 
-    /// <summary>One pass over the process table.</summary>
-    public static ProcessSnapshot Snapshot()
+    /// <summary>
+    /// One pass over the process table.
+    ///
+    /// <paramref name="namesOfInterest"/> 是项目库里所有目标的进程名：给了它就只深挖这些进程，
+    /// 其余进程连 <see cref="Process.MainModule"/> 都不碰。以前每 3 秒把整张进程表（含系统进程）
+    /// 全查一遍，一次几十到上百毫秒卡在 UI 线程上，就是「隔几秒顿一下」的来源。
+    /// </summary>
+    public static ProcessSnapshot Snapshot(IReadOnlyCollection<string>? namesOfInterest = null)
     {
         var snapshot = new ProcessSnapshot();
         Process[] all;
         try { all = Process.GetProcesses(); }
         catch { return snapshot; }
+
+        var filter = namesOfInterest is { Count: > 0 } ? namesOfInterest : null;
 
         foreach (var proc in all)
         {
@@ -86,6 +95,7 @@ public static class RunningService
             {
                 var name = proc.ProcessName;
                 if (string.IsNullOrEmpty(name)) continue;
+                if (filter is not null && !filter.Contains(name)) continue;
 
                 IntPtr window;
                 try { window = proc.MainWindowHandle; } catch { window = IntPtr.Zero; }

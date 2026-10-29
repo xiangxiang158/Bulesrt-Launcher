@@ -320,10 +320,7 @@ public partial class MainWindow
         if (_windowMoving) return;
         _windowMoving = true;
         _animTimer.Stop();
-        BgBlurEffect.Radius = 0;
-        BgImage.RenderTransform = Transform.Identity;
-        // 大图插值也是逐帧成本，拖动时降一档，肉眼几乎看不出差别
-        RenderOptions.SetBitmapScalingMode(BgImage, BitmapScalingMode.LowQuality);
+        ApplyBackdropSource();          // 拖动期间直接看原图：不做模糊、不缩放
     }
 
     /// <summary>移动循环结束后恢复原来的模糊与动图。</summary>
@@ -331,7 +328,6 @@ public partial class MainWindow
     {
         if (!_windowMoving) return;
         _windowMoving = false;
-        RenderOptions.SetBitmapScalingMode(BgImage, BitmapScalingMode.HighQuality);
         ApplyBackdropBlur(_backdropImage is null ? 0 : _store.Db.Settings.BackgroundBlur);
         // 弹窗开着的时候背景动图本来就是停的，别在拖完窗口后把它叫回来
         if (IsVisible && WindowState != WindowState.Minimized && ModalLayer.Visibility != Visibility.Visible)

@@ -29,16 +29,23 @@ public partial class MainWindow
     private readonly DispatcherTimer _surfaceTimer = new() { Interval = TimeSpan.FromMilliseconds(60) };
     private readonly DispatcherTimer _backdropSaveTimer = new() { Interval = TimeSpan.FromMilliseconds(650) };
     private readonly DispatcherTimer _animTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
+    private readonly DispatcherTimer _blurTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+
+    /// <summary>动图逐帧烘焙的上限：超过这个帧数就按原样播放，避免烘焙吃光内存。</summary>
+    private const int MaxBlurAnimationFrames = 80;
     private string? _backdropPath;
     private BitmapSource? _backdropImage;
     private AnimatedBackdrop? _animation;
     private int _frameIndex;
 
+    // 预烘焙的模糊结果：静态图一张、动图每帧一张。播放阶段只换贴图，不再逐帧算模糊。
+    private BitmapSource? _blurredImage;
+    private AnimatedBackdrop? _blurredAnimation;
+    private double _blurRadius;
+    private int _blurVersion;
+
     /// <summary>拖动 / 缩放窗口期间为 true：此时关掉模糊与动图，退出后恢复。</summary>
     private bool _windowMoving;
-
-    /// <summary>模糊时用来放大背景的那个变换，复用一个实例，拖模糊滑块时不再每次 new。</summary>
-    private readonly ScaleTransform _bgZoom = new(1, 1);
 
     private void ApplySettingsToUi()
     {
@@ -106,9 +113,12 @@ public partial class MainWindow
             _animation = path is not null && BackgroundService.IsAnimated(path)
                 ? BackgroundService.LoadAnimation(path)
                 : null;
+            _blurredImage = null;
+            _blurredAnimation = null;
+            _frameIndex = 0;
+            _blurVersion++;                    // 作废还在后台跑的烘焙任务
         }
 
-        BgImage.Source = _backdropImage;
         BgImage.Visibility = _backdropImage is null ? Visibility.Collapsed : Visibility.Visible;
         // 0 = absolutely clean picture; the scrims grow with the dim slider
         var dim = Math.Clamp(s.BackgroundDim, 0, 0.85);
@@ -117,7 +127,6 @@ public partial class MainWindow
         LeftScrim.Opacity = _backdropImage is null ? 0 : Math.Min(0.50, dim * 1.15);
         ApplyBackdropBlur(_backdropImage is null ? 0 : s.BackgroundBlur);
         ApplyWindowTransparency();
-        RefreshAnimation();
         UpdateBackgroundLabels();
     }
 
@@ -130,16 +139,42 @@ public partial class MainWindow
         Backdrop.Opacity = 1 - transparent;
     }
 
+    /// <summary>当前该显示的静态背景帧：烘焙好的模糊版优先。</summary>
+    private BitmapSource? CurrentBackdropSource()
+    {
+        if (_windowMoving)
+            return _animation is { Frames.Count: > 0 } ? _animation.Frames[0].Frame : _backdropImage;
+
+        if (_blurredImage is not null) return _blurredImage;
+        if (_animation is { Frames.Count: > 0 } raw)
+        {
+            _frameIndex %= raw.Frames.Count;
+            return raw.Frames[_frameIndex].Frame;
+        }
+        return _backdropImage;
+    }
+
+    /// <summary>把当前该显示的背景丢给 Image（不做任何渲染期特效）。</summary>
+    private void ApplyBackdropSource()
+    {
+        BgImage.Source = CurrentBackdropSource();
+    }
+
     /// <summary>Starts / stops the GIF player depending on the setting.</summary>
     private void RefreshAnimation()
     {
         _animTimer.Stop();
-        _frameIndex = 0;
-        if (_animation is null || _animation.Frames.Count < 2) return;
+        ApplyBackdropSource();
 
-        BgImage.Source = _animation.Frames[0].Frame;
+        if (_animation is null || _animation.Frames.Count < 2) return;
+        // 滑块刚动过：烘焙还没回来，先停一帧，等结果到了再开始播
+        if (_blurTimer.IsEnabled) return;
         if (!_store.Db.Settings.BackdropAnimation) return;
-        _animTimer.Interval = _animation.Frames[0].Delay;
+
+        var play = _blurredAnimation ?? _animation;
+        _frameIndex %= play.Frames.Count;
+        BgImage.Source = play.Frames[_frameIndex].Frame;
+        _animTimer.Interval = play.Frames[_frameIndex].Delay;
         _animTimer.Start();
     }
 
@@ -147,30 +182,78 @@ public partial class MainWindow
     {
         if (_animation is null || _animation.Frames.Count < 2) return;
         if (!IsVisible || WindowState == WindowState.Minimized) return;
-        _frameIndex = (_frameIndex + 1) % _animation.Frames.Count;
-        var (frame, delay) = _animation.Frames[_frameIndex];
+        if (_windowMoving) return;
+
+        var play = _blurredAnimation ?? _animation;
+        _frameIndex = (_frameIndex + 1) % play.Frames.Count;
+        var (frame, delay) = play.Frames[_frameIndex];
         BgImage.Source = frame;
         _animTimer.Interval = delay;
     }
 
-    /// <summary>Blur bleeds at the edges, so the picture is scaled up a touch before blurring.</summary>
+    /// <summary>
+    /// 背景模糊。以前是 XAML 里挂着的实时 <see cref="System.Windows.Media.Effects.BlurEffect"/>：
+    /// 分层窗口没有 GPU 合成，每一帧都要 CPU 重算整窗高斯模糊，拖窗口 / 滚动 / 播动图必然掉帧。
+    /// 现在改成滑块停下 120ms 后在后台烤一次位图，播放阶段只剩一次贴图。
+    /// </summary>
     private void ApplyBackdropBlur(double radius)
     {
-        radius = Math.Clamp(radius, 0, 60);
-        BgBlurEffect.Radius = radius;
+        _blurRadius = Math.Clamp(radius, 0, 60);
 
-        var zoom = radius > 0.5 ? 1 + radius / 90.0 : 1;
-        if (zoom <= 1.0001)
+        if (_backdropImage is null || _blurRadius < 0.6)
         {
-            if (BgImage.RenderTransform is not null && BgImage.RenderTransform != Transform.Identity)
-                BgImage.RenderTransform = Transform.Identity;
+            _blurVersion++;
+            _blurredImage = null;
+            _blurredAnimation = null;
+            _blurTimer.Stop();
+            RefreshAnimation();
             return;
         }
 
-        _bgZoom.ScaleX = zoom;
-        _bgZoom.ScaleY = zoom;
-        BgImage.RenderTransformOrigin = new Point(0.5, 0.5);
-        if (!ReferenceEquals(BgImage.RenderTransform, _bgZoom)) BgImage.RenderTransform = _bgZoom;
+        _blurTimer.Stop();
+        _blurTimer.Start();
+        RefreshAnimation();     // 先用现有的图顶住，拖动滑块时不会白屏
+    }
+
+    /// <summary>后台把「原图 + 模糊半径」烤成位图，回来时如果半径又变了就丢弃。</summary>
+    private void BakeBackdropBlur()
+    {
+        _blurTimer.Stop();
+
+        var still = _backdropImage;
+        if (still is null) return;
+
+        var version = ++_blurVersion;
+        var radius = _blurRadius;
+        var frames = _animation;
+        var dispatcher = Dispatcher;
+        var screenWidth = Math.Max(320, ActualWidth);   // 同一半径在不同窗口宽度下的观感才一致
+
+        Task.Run(() =>
+        {
+            var bakedStill = BackgroundService.BakeBlur(still, radius, screenWidth);
+            AnimatedBackdrop? bakedFrames = null;
+
+            if (frames is not null && frames.Frames.Count > 1 && frames.Frames.Count <= MaxBlurAnimationFrames)
+            {
+                var list = new List<(BitmapSource Frame, TimeSpan Delay)>(frames.Frames.Count);
+                foreach (var (frame, delay) in frames.Frames)
+                {
+                    if (version != _blurVersion) return;    // 又拖动了：别再烧 CPU
+                    // 动图只烤 640 宽：帧一多，烘焙结果的内存和 CPU 都要压住
+                    list.Add((BackgroundService.BakeBlur(frame, radius, screenWidth, 640) ?? frame, delay));
+                }
+                bakedFrames = new AnimatedBackdrop(list, frames.Truncated);
+            }
+
+            dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (version != _blurVersion) return;
+                _blurredImage = bakedStill;
+                _blurredAnimation = bakedFrames;
+                RefreshAnimation();
+            }));
+        });
     }
 
     private void ScheduleSurfaceApply(double value)
@@ -189,6 +272,7 @@ public partial class MainWindow
     private void InitBackdrop()
     {
         _animTimer.Tick += (_, _) => AnimationTick();
+        _blurTimer.Tick += (_, _) => BakeBackdropBlur();
         _surfaceTimer.Tick += (_, _) =>
         {
             _surfaceTimer.Stop();

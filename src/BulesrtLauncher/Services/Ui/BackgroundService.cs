@@ -151,6 +151,167 @@ public static class BackgroundService
         }
     }
 
+    /// <summary>
+    /// 把「模糊」提前烤进位图。
+    ///
+    /// 原来 XAML 里挂的是实时 Gaussian <c>BlurEffect</c>：分层窗口（AllowsTransparency）没有 GPU 合成，
+    /// 每一帧都要在 CPU 上把整窗重新模糊一遍——拖窗口、滚动、动图播放全都掉帧。改成加载时先降采样、
+    /// 再做三遍盒式模糊（≈高斯），播放阶段就只剩一次贴图。
+    /// </summary>
+    /// <param name="source">原图（冻结位图，可在后台线程安全使用）</param>
+    /// <param name="radius">滑块上的模糊值，单位是屏幕像素</param>
+    /// <param name="screenWidth">窗口宽度（DIP）：按它折算盒式半径，不同窗口尺寸下模糊观感才一致</param>
+    /// <param name="maxWidth">烘焙后的最大宽度：屏幕上已经糊成一片，不需要原分辨率</param>
+    public static BitmapSource? BakeBlur(BitmapSource? source, double radius, double screenWidth = 1200, int maxWidth = 1280)
+    {
+        if (source is null) return null;
+        radius = Math.Clamp(radius, 0, 60);
+        if (radius < 0.6) return source;
+
+        // 0.33 是和旧渲染（BlurEffect + 1+r/90 放大）做像素级比对标定出来的
+        const double BoxFactor = 0.33;
+
+        try
+        {
+            var w0 = source.PixelWidth;
+            var h0 = source.PixelHeight;
+            if (w0 < 4 || h0 < 4) return source;
+
+            // 旧版为了藏住模糊边缘，把图放大过 1 + radius/90；这里直接裁同样的中心区域，
+            // 取景和以前完全一致，却不需要渲染期再做缩放。
+            var zoom = 1 + radius / 90.0;
+            BitmapSource baseImage = source;
+            if (zoom > 1.0001)
+            {
+                var cw = Math.Max(4, (int)Math.Round(w0 / zoom));
+                var ch = Math.Max(4, (int)Math.Round(h0 / zoom));
+                baseImage = new CroppedBitmap(source, new Int32Rect((w0 - cw) / 2, (h0 - ch) / 2, cw, ch));
+            }
+
+            var sizeW = baseImage.PixelWidth;
+            var scale = sizeW > maxWidth ? (double)maxWidth / sizeW : 1.0;
+            BitmapSource sized = scale < 1.0
+                ? new TransformedBitmap(baseImage, new ScaleTransform(scale, scale))
+                : baseImage;
+            BitmapSource bgra = sized.Format == PixelFormats.Bgra32
+                ? sized
+                : new FormatConvertedBitmap(sized, PixelFormats.Bgra32, null, 0);
+
+            var w = bgra.PixelWidth;
+            var h = bgra.PixelHeight;
+            if (w < 4 || h < 4) return source;
+
+            var stride = w * 4;
+            var pixels = new byte[stride * h];
+            bgra.CopyPixels(pixels, stride, 0);
+
+            // 盒式模糊三遍的 sigma ≈ 半径本身；半径按「屏幕像素 → 烘焙图像素」换算，
+            // 滑块看到的模糊强度才和以前一致。
+            var box = (int)Math.Round(radius * BoxFactor * w / Math.Max(1, screenWidth));
+            box = Math.Clamp(box, 1, Math.Max(1, Math.Min(w, h) / 3));
+
+            Premultiply(pixels);
+            for (var pass = 0; pass < 3; pass++)
+            {
+                BoxPass(pixels, w, h, box, horizontal: true);
+                BoxPass(pixels, w, h, box, horizontal: false);
+            }
+            Unpremultiply(pixels);
+
+            var result = BitmapSource.Create(w, h, 96, 96, PixelFormats.Bgra32, null, pixels, stride);
+            result.Freeze();
+            return result;
+        }
+        catch
+        {
+            return source;
+        }
+    }
+
+    /// <summary>预乘 alpha：直接模糊 A 通道会在半透明边缘留黑边，先乘后除就没这问题。</summary>
+    private static void Premultiply(byte[] pixels)
+    {
+        for (var i = 0; i < pixels.Length; i += 4)
+        {
+            var a = pixels[i + 3];
+            if (a == 255) continue;
+            pixels[i] = (byte)(pixels[i] * a / 255);
+            pixels[i + 1] = (byte)(pixels[i + 1] * a / 255);
+            pixels[i + 2] = (byte)(pixels[i + 2] * a / 255);
+        }
+    }
+
+    private static void Unpremultiply(byte[] pixels)
+    {
+        for (var i = 0; i < pixels.Length; i += 4)
+        {
+            var a = pixels[i + 3];
+            if (a == 255 || a == 0) continue;
+            pixels[i] = (byte)Math.Min(255, pixels[i] * 255 / a);
+            pixels[i + 1] = (byte)Math.Min(255, pixels[i + 1] * 255 / a);
+            pixels[i + 2] = (byte)Math.Min(255, pixels[i + 2] * 255 / a);
+        }
+    }
+
+    /// <summary>滑窗盒式模糊的一遍（横或纵），边界按边缘像素延伸。</summary>
+    private static void BoxPass(byte[] pixels, int w, int h, int r, bool horizontal)
+    {
+        var len = horizontal ? w : h;
+        var outer = horizontal ? h : w;
+        var count = 2 * r + 1;
+        var line = new byte[len * 4];
+        var done = new byte[len * 4];
+
+        for (var o = 0; o < outer; o++)
+        {
+            for (var i = 0; i < len; i++)
+            {
+                var p = horizontal ? (o * w + i) * 4 : (i * w + o) * 4;
+                var q = i * 4;
+                line[q] = pixels[p];
+                line[q + 1] = pixels[p + 1];
+                line[q + 2] = pixels[p + 2];
+                line[q + 3] = pixels[p + 3];
+            }
+
+            int sb = 0, sg = 0, sr = 0, sa = 0;
+            for (var i = -r; i <= r; i++)
+            {
+                var idx = Math.Clamp(i, 0, len - 1) * 4;
+                sb += line[idx];
+                sg += line[idx + 1];
+                sr += line[idx + 2];
+                sa += line[idx + 3];
+            }
+
+            for (var i = 0; i < len; i++)
+            {
+                var q = i * 4;
+                done[q] = (byte)(sb / count);
+                done[q + 1] = (byte)(sg / count);
+                done[q + 2] = (byte)(sr / count);
+                done[q + 3] = (byte)(sa / count);
+
+                var add = Math.Min(len - 1, i + r + 1) * 4;
+                var sub = Math.Max(0, i - r) * 4;
+                sb += line[add] - line[sub];
+                sg += line[add + 1] - line[sub + 1];
+                sr += line[add + 2] - line[sub + 2];
+                sa += line[add + 3] - line[sub + 3];
+            }
+
+            for (var i = 0; i < len; i++)
+            {
+                var p = horizontal ? (o * w + i) * 4 : (i * w + o) * 4;
+                var q = i * 4;
+                pixels[p] = done[q];
+                pixels[p + 1] = done[q + 1];
+                pixels[p + 2] = done[q + 2];
+                pixels[p + 3] = done[q + 3];
+            }
+        }
+    }
+
     private static TimeSpan DelayOf(BitmapFrame frame)
     {
         try

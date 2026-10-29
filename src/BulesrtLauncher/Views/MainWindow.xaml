@@ -28,11 +28,7 @@
             <Grid x:Name="Backdrop" Grid.RowSpan="3" ClipToBounds="True" IsHitTestVisible="False">
                 <Rectangle Fill="{DynamicResource BgBrush}" />
                 <Image x:Name="BgImage" Stretch="UniformToFill" Visibility="Collapsed"
-                       RenderOptions.BitmapScalingMode="HighQuality">
-                    <Image.Effect>
-                        <BlurEffect x:Name="BgBlurEffect" Radius="0" KernelType="Gaussian" RenderingBias="Performance" />
-                    </Image.Effect>
-                </Image>
+                       RenderOptions.BitmapScalingMode="LowQuality" />
                 <Rectangle x:Name="BgScrim" Fill="#000000" Opacity="0" />
                 <!-- keeps title bar + sidebar text readable on bright photos -->
                 <Rectangle x:Name="TopScrim" Height="110" VerticalAlignment="Top" Opacity="0">
@@ -184,7 +180,7 @@
                                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                         </Border>
                                                         <Image Source="{Binding Icon}" Width="64" Height="64" Stretch="Uniform"
-                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                               RenderOptions.BitmapScalingMode="LowQuality" />
                                                         <Ellipse Width="11" Height="11" Fill="#3FD08E"
                                                                  Stroke="{DynamicResource BgBrush}" StrokeThickness="2"
                                                                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,3,3,0"
@@ -240,7 +236,7 @@
                                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                         </Border>
                                                         <Image Source="{Binding Icon}" Width="26" Height="26"
-                                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                                               RenderOptions.BitmapScalingMode="LowQuality" />
                                                     </Grid>
                                                 </Border>
                                                 <StackPanel Grid.Column="1" Margin="14,0,12,0" VerticalAlignment="Center">
