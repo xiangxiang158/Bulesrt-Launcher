@@ -36,7 +36,8 @@ public static class ShellLauncher
     private static extern bool CloseHandle(IntPtr handle);
 
     private const uint SEE_MASK_NOCLOSEPROCESS = 0x00000040;
-    private const uint SEE_MASK_FLAG_NO_UI = 0x00000400;
+    // 注意：不要加 SEE_MASK_FLAG_NO_UI —— 它会把 UAC 提权提示一起吞掉，
+    // 需要管理员的程序（卸载器、系统工具）就会以普通权限启动，行为与双击不一致。
     private const int SW_SHOWNORMAL = 1;
 
     public static (bool Ok, int Error) Execute(string file, string? arguments, string? workingDirectory, string? verb)
@@ -44,7 +45,7 @@ public static class ShellLauncher
         var info = new SHELLEXECUTEINFO
         {
             cbSize = Marshal.SizeOf<SHELLEXECUTEINFO>(),
-            fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI,
+            fMask = SEE_MASK_NOCLOSEPROCESS,
             hwnd = IntPtr.Zero,
             lpVerb = string.IsNullOrWhiteSpace(verb) ? null : verb,
             lpFile = file,

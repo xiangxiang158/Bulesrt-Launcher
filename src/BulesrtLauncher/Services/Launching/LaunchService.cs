@@ -18,6 +18,19 @@ public static class LaunchService
         var extraArgs = (item.Arguments ?? "").Trim();
         var itemWorkDir = (item.WorkingDirectory ?? "").Trim().Trim('"');
 
+        // 快捷方式且用户没另设参数/工作目录时：把 .lnk 原样交给 Shell，
+        // 这样“起始位置 / 以管理员身份运行 / UAC / 图标”全部由 Windows 按双击的方式处理。
+        // 只有需要覆盖参数或工作目录时，才解析成 exe 自己调（为了控制 cwd，例如米哈游启动器）。
+        if (raw.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) && File.Exists(raw)
+            && string.IsNullOrWhiteSpace(extraArgs) && string.IsNullOrWhiteSpace(itemWorkDir))
+        {
+            var (okLnk, errLnk) = ShellLauncher.Execute(raw, null, null, asAdmin ? "runas" : null);
+            Log($"raw={raw} | 快捷方式直启（等同双击） | admin={asAdmin}");
+            if (okLnk) return (true, "");
+            if (errLnk == 1223) return (false, "已取消管理员授权");
+            return (false, errLnk == 0 ? "启动失败" : $"ShellExecuteEx 失败 (WinError {errLnk})");
+        }
+
         // A .lnk carries its own target / arguments / start-in; resolve it so we control the
         // working directory instead of letting the shell use whatever the shortcut stored.
         var target = raw;
