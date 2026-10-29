@@ -12,7 +12,7 @@
     <RootNamespace>BulesrtLauncher</RootNamespace>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.0.1</Version>
+    <Version>2.0.0</Version>
     <AssemblyTitle>Bulesrt Launcher</AssemblyTitle>
     <Product>Bulesrt Launcher</Product>
     <Copyright>© 2026 xiang. All rights reserved.</Copyright>
