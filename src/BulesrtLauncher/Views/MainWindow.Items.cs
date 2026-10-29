@@ -212,6 +212,7 @@ public partial class MainWindow
         var menu = new ContextMenu();
         menu.Items.Add(MenuItem("打开", () => Launch(item, false)));
         menu.Items.Add(MenuItem("以管理员身份运行", () => Launch(item, true)));
+        menu.Items.Add(MenuItem("用资源管理器方式打开（兼容）", () => LaunchCompat(item)));
         menu.Items.Add(MenuItem("再开一个实例（多开）", () => Launch(item, false)));
         if (item.IsRunning)
         {
@@ -246,6 +247,14 @@ public partial class MainWindow
         var mi = new MenuItem { Header = header };
         mi.Click += (_, _) => action();
         return mi;
+    }
+
+    /// <summary>兼容启动：交给 explorer.exe，和鼠标双击完全同一条路径。</summary>
+    private void LaunchCompat(AppItem item)
+    {
+        var (ok, err) = LaunchService.LaunchViaExplorer(item);
+        if (ok) Toast($"已用资源管理器打开 · {item.Name}");
+        else Toast("启动失败：" + err, true);
     }
 
     private void Launch(AppItem item, bool admin)

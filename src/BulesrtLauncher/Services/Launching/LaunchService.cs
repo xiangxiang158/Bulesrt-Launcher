@@ -22,6 +22,7 @@ public static class LaunchService
         var target = raw;
         var shortcutArgs = "";
         var shortcutWorkDir = "";
+        var shortcutRunAs = false;
         if (raw.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) && File.Exists(raw))
         {
             var sc = ShortcutResolver.Resolve(raw);
@@ -31,6 +32,7 @@ public static class LaunchService
                 target = sc.Target;
                 shortcutArgs = sc.Arguments;
                 shortcutWorkDir = sc.WorkingDirectory;
+                shortcutRunAs = sc.RunAsAdmin;
             }
         }
 
@@ -55,16 +57,39 @@ public static class LaunchService
             else if (IsDirectory(shortcutWorkDir)) workDir = shortcutWorkDir; // shortcut's own “start in”
             else workDir = autoDir;
 
-            Log($"raw={raw} | target={target} | args=[{args}] | cwd=[{workDir}] | admin={asAdmin}");
+            var runElevated = asAdmin || shortcutRunAs;
+            Log($"raw={raw} | target={target} | args=[{args}] | cwd=[{workDir}] | admin={runElevated}"
+                + (shortcutRunAs && !asAdmin ? " (继承快捷方式的管理员标记)" : ""));
             var (ok, winError) = ShellLauncher.Execute(
                 target,
                 args.Length > 0 ? args : null,
                 workDir.Length > 0 && Directory.Exists(workDir) ? workDir : null,
-                asAdmin ? "runas" : null);
+                runElevated ? "runas" : null);
 
             if (ok) return (true, "");
             if (winError == 1223) return (false, "已取消管理员授权");
             return (false, winError == 0 ? "启动失败" : $"ShellExecuteEx 失败 (WinError {winError})");
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// 兼容模式：交给 explorer.exe 打开，和鼠标双击完全同一条路径。
+    /// 个别程序（例如几个卸载器/老 Delphi 程序）自己启动会崩，用这个往往就正常。
+    /// </summary>
+    public static (bool Ok, string Error) LaunchViaExplorer(AppItem item)
+    {
+        var raw = (item.Target ?? "").Trim().Trim('"');
+        if (string.IsNullOrWhiteSpace(raw)) return (false, "启动目标为空");
+        try
+        {
+            var psi = new ProcessStartInfo("explorer.exe", $"\"{raw}\"") { UseShellExecute = true };
+            Process.Start(psi);
+            Log($"raw={raw} | via explorer.exe（兼容模式）");
+            return (true, "");
         }
         catch (Exception ex)
         {

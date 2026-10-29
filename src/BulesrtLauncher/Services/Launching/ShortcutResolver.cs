@@ -6,7 +6,7 @@ namespace BulesrtLauncher.Services.Launching;
 /// <summary>Resolves classic .lnk shortcuts into target / arguments / working directory.</summary>
 public static class ShortcutResolver
 {
-    public sealed record ShortcutInfo(string Target, string Arguments, string WorkingDirectory);
+    public sealed record ShortcutInfo(string Target, string Arguments, string WorkingDirectory, bool RunAsAdmin);
 
     public static ShortcutInfo? Resolve(string lnkPath)
     {
@@ -29,7 +29,8 @@ public static class ShortcutResolver
             return new ShortcutInfo(
                 Environment.ExpandEnvironmentVariables(target.ToString()),
                 args.ToString(),
-                Environment.ExpandEnvironmentVariables(work.ToString()));
+                Environment.ExpandEnvironmentVariables(work.ToString()),
+                HasRunAsAdminFlag(lnkPath));
         }
         catch
         {
@@ -38,6 +39,26 @@ public static class ShortcutResolver
         finally
         {
             if (link is not null) try { Marshal.FinalReleaseComObject(link); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// .lnk 的 LinkFlags 在偏移 0x14（DWORD），第 0x20 位 = RunAsAdministrator。
+    /// 资源管理器双击时会据此提权；启动器如果不继承，像 HiBit Uninstaller 这种必须管理员权限
+    /// 的程序就会以普通权限跑起来，行为可能和双击不一致。
+    /// </summary>
+    private static bool HasRunAsAdminFlag(string lnkPath)
+    {
+        try
+        {
+            var bytes = System.IO.File.ReadAllBytes(lnkPath);
+            if (bytes.Length < 0x18) return false;
+            var flags = System.BitConverter.ToUInt32(bytes, 0x14);
+            return (flags & 0x20) != 0;
+        }
+        catch
+        {
+            return false;
         }
     }
 
