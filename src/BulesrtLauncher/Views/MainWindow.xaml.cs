@@ -64,6 +64,7 @@ public partial class MainWindow : Window
                 NudgeRepaint();
             };
             timer.Start();
+            WarnIfRestricted();
             await LoadIconsAsync();
 
             if (Environment.GetCommandLineArgs().Any(a => a.Equals("--plugins", StringComparison.OrdinalIgnoreCase)))

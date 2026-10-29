@@ -239,6 +239,7 @@ public partial class MainWindow
             };
             var menu = new WinForms.ContextMenuStrip();
             menu.Items.Add("显示主界面", null, (_, _) => ShowFromTray());
+            menu.Items.Add("以管理员身份重新启动", null, (_, _) => RestartAsAdmin());
             menu.Items.Add("退出", null, (_, _) =>
             {
                 _forceClose = true;
@@ -250,6 +251,44 @@ public partial class MainWindow
         catch
         {
             // tray is optional
+        }
+    }
+
+    private void RestartAsAdmin()
+    {
+        if (IntegrityService.Current == IntegrityService.Level.High ||
+            IntegrityService.Current == IntegrityService.Level.System)
+        {
+            Toast("当前已经是管理员权限");
+            return;
+        }
+        if (IntegrityService.RestartElevated())
+        {
+            _forceClose = true;
+            Close();
+        }
+        else
+        {
+            Toast("提权被取消或失败", true);
+        }
+    }
+
+    /// <summary>启动时检查权限级别：低权限会让部分程序（卸载器、系统工具）启动失败。</summary>
+    private void WarnIfRestricted()
+    {
+        var level = IntegrityService.Current;
+        try
+        {
+            var dir = System.IO.Path.Combine(AppContext.BaseDirectory, "data");
+            System.IO.Directory.CreateDirectory(dir);
+            System.IO.File.AppendAllText(System.IO.Path.Combine(dir, "launch.log"),
+                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} 进程完整性级别 = {IntegrityService.Describe(level)}{Environment.NewLine}");
+        }
+        catch { /* logging must never break startup */ }
+
+        if (level == IntegrityService.Level.Low)
+        {
+            Toast("当前以「低权限」运行，卸载器/系统工具类程序可能启动失败；右键托盘图标可「以管理员身份重新启动」", true);
         }
     }
 
